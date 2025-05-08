@@ -35,8 +35,6 @@ jobs: ##
 #           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
   calculate_new_tag:
     runs-on: ubuntu-latest
-    env:
-     RELEASE_TAG: ${{ env.RELEASE_TAG }}
     
     outputs:
       tag: ${{ steps.set_tag.outputs.NEW_TAG }}
@@ -48,6 +46,8 @@ jobs: ##
 
       - name: Calculate new tag
         id: set_tag
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
           NEW_TAG="$RELEASE_TAG"
           echo "new tag is: $NEW_TAG"
