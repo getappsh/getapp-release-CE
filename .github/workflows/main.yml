@@ -124,7 +124,7 @@ jobs: ##
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main        
-          fetch-depth: 0 # Important for getting all tags and history
+          fetch-depth: 0 ## Important for getting all tags and history
   
       - name: Download .env file
         uses: actions/download-artifact@v4
