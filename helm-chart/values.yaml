@@ -9,19 +9,19 @@ nameSpace: getapp-f
 # and use "route" instead of "ingress".
 isOpenShift: false
 
-gitlabrelease: 1.3.70
+gitlabrelease: 1.4.0-CE
 repository: harbor.getapp.sh/getapp-dev/
 tag:
-  api: 1.3.95-develop
-  delivery: 1.3.71-develop
-  deploy: 1.3.41-develop
-  discovery: 1.3.92-develop
-  offering: 1.3.70-develop
-  projectmanagment: 1.3.35-develop
-  upload: 1.3.41-develop
-  dashboard: 1.3.8-develop
-  getmap: 1.3.59-develop
-  docs: v1-27-01-2025
+  api: 1.4.1-develop
+  delivery: 1.4.1-develop
+  deploy: 1.4.1-develop
+  discovery: 1.4.1-develop
+  offering: 1.4.3-develop
+  projectmanagment: 1.4.1-develop
+  upload: 1.4.1-develop
+  dashboard: 1.4.2-develop
+  getmap: 1.4.2-develop
+  docs: v1-27-03-2025
 
 
 image:
