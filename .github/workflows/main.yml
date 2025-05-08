@@ -79,7 +79,6 @@ jobs: ##
             ["PROJECT_MANAGEMENT"]="getappsh/project-management"
             ["UPLOAD"]="getappsh/upload"
             ["GETMAP"]="getappsh/getmap"
-            ["DASHBOARD"]="getappsh/dashboard"
           )
           
           # Process each repository and append to .env
