@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: docs
+  labels:
+    getapp: getmap
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    getapp: docs
+
+

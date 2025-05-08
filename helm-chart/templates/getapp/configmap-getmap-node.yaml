@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "getmap-node-{{ .Values.nameSpace }}"
+  labels:
+    getapp: getmap
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+
+data:
+  TOKEN_LIBOT: >-
+    eyJhbGciOiJSUzI1NiIsImtpZCI6Im1hcC1jb2xvbmllcy1pbnQifQ.eyJkIjpbInJhc3RlciIsInJhc3RlckV4cG9ydCJdLCJpYXQiOjE2NzYyMTQ5NzIsInN1YiI6ImdldE1hcEN1c3RvbWVyIiwiaXNzIjoibWFwY29sb25pZXMtdG9rZW4tY2xpIn0.TYqpoyw_s1JXoELi2k2wGJ3vEvlt3JH5KexGOeKPKeBWWVMVUkXnU0pDJSMLRNwLvlnkEa0hRT2Ktw9bVcL5lVytHR4Yex_8Tv0EA1RQyrcQ-MndumuwI4O6-6dqI5iGAmd6SAhBSP3cOkdsYDhRz_IT4ZQrqmN17Lty9UfQNEGLJnsH-egc8aQKe3iGas8G5uZE8QlQJkw8k9HMObSk1J70IHmp75S1JEZ3Jvk0fymaeVyAuh1_TLixOPoVFc65vGti2uplMRiylsZNxPML1fAHcLWVZP_VnB_IbcGKiHeWWTxJmVruV6iANCFSiQI8S1GnyA15afJbKZw5ByTAIg
+  MC_MIN_RESOLUTION_DEG: '4.29153E-05'
+  USE_CACHE: 'true'
+  LIBOT_DISCOVERY_URL: 'http://proxy-getmap-csw.getapp.sh/api/raster/v1'
+  MAX_BBOX_AREA_4_EXPORT: '0.033'
+  MC_MAX_RESOLUTION_DEG: '1.34110E-06'
+  LIBOT_EXPORT_URL: 'http://proxy-getmap-export.getapp.sh/api/raster/v1/export-tasks'
+  CSW__UpdateCheckPeriod: '35'
+  CSW__Implementation: '0'
+  TARGET_RESOLUTION: '17'
+  MC_CSW_REF_DATE: '2023-10-15T00:00:01Z'
+  PROXY_DOWNLOAD_BASE_URL: 'http://proxy-getmap-files.getapp.sh'
+  LIBOT_CALLBACK_URL: 'https://api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}/api/map/export-notification'

@@ -1,0 +1,34 @@
+{{- if not .Values.isOpenShift }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docs
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  labels:
+    getapp: docs
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - docs-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+    secretName: docs-tls
+  rules:
+  - host: docs-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: docs
+            port:
+              number: 80
+{{- end }}

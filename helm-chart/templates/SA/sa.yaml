@@ -1,0 +1,65 @@
+{{- if .Values.isOpenShift }}
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Namespace }}-getapp-run-as-root
+  namespace: {{ .Release.Namespace }}
+
+---
+# Security Context Constraints (SCC)
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: {{ .Release.Namespace }}-getapp-run-as-root-scc
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: false
+allowHostNetwork: false
+allowHostPorts: false
+allowHostPID: false
+allowHostIPC: false
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+fsGroup:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+users: []
+groups: []
+
+---
+# Role for the SCC
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: use-{{ .Release.Namespace }}-getapp-run-as-root-scc
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  resourceNames:
+  - {{ .Release.Namespace }}-getapp-run-as-root-scc
+  verbs:
+  - use
+
+---
+# RoleBinding to associate the ServiceAccount with the Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Namespace }}-getapp-run-as-root-binding
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: use-{{ .Release.Namespace }}-getapp-run-as-root-scc
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Namespace }}-getapp-run-as-root
+  namespace: {{ .Release.Namespace }}
+
+{{- end }}

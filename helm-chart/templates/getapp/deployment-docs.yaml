@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docs
+  labels:
+    getapp: docs
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      getapp: docs
+  template:
+    metadata:
+      labels:
+        getapp: docs
+      annotations:
+        buildID: {{ .Values.buildID | default "" | quote }}
+    spec:
+      {{- if .Values.isOpenShift }}
+      serviceAccountName: {{ .Release.Namespace }}-getapp-run-as-root
+      {{- end }}
+      containers:
+        - name: docs
+          image: "{{ .Values.repository }}docs:{{ .Values.tag.docs }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.isOpenShift }}
+          securityContext:
+            runAsUser: 0
+          {{- end }}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 300Mi
+            requests:
+              cpu: 500m
+              memory: 300Mi
+          ports:
+            - name: http6
+              containerPort: {{ .Values.deployment.containerPort }}
+              protocol: TCP
+          {{- if .Values.probes.enabled }}
+          #livenessProbe:
+          #  httpGet:
+          #    path: /
+          #    port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: "getapp-{{ .Values.nameSpace }}"  
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

@@ -1,0 +1,51 @@
+
+replicaCount: 1
+#routeMainlUrl: apps.sr.eastus.aroapp.io
+routeMainlUrl: apps.getapp.sh
+nameSpace: getapp-f
+
+# Set to true when deploying to OpenShift
+# This will enable OpenShift-specific security configurations
+# and use "route" instead of "ingress".
+isOpenShift: false
+
+gitlabrelease: 1.3.70
+repository: harbor.getapp.sh/getapp-dev/
+tag:
+  api: 1.3.95-develop
+  delivery: 1.3.71-develop
+  deploy: 1.3.41-develop
+  discovery: 1.3.92-develop
+  offering: 1.3.70-develop
+  projectmanagment: 1.3.35-develop
+  upload: 1.3.41-develop
+  dashboard: 1.3.8-develop
+  getmap: 1.3.59-develop
+  docs: v1-27-01-2025
+
+
+image:
+  repository: harbor.getapp.sh/getapp-dev/
+  pullPolicy: IfNotPresent #Always
+
+service:
+  type: ClusterIP 
+  port: 80
+deployment:
+  containerPort: 80
+probes:
+  enabled: false
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/tls-acme: "true"
+  path: /
+  # hosts:
+  #   - chart-example.local
+  tls: []
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+kafka:
+  host: kafka
+  port: 9092

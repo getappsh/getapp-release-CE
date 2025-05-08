@@ -1,0 +1,38 @@
+# kind: PostgresCluster
+# apiVersion: postgres-operator.crunchydata.com/v1beta1
+# metadata:
+#   name: "postgres-{{ .Values.nameSpace }}"
+# spec:
+#   backups:
+#     pgbackrest:
+#       repos:
+#         - name: repo1
+#           volume:
+#             volumeClaimSpec:
+#               accessModes:
+#                 - ReadWriteOnce
+#               resources:
+#                 requests:
+#                   storage: 1Gi
+#   instances:
+#     - dataVolumeClaimSpec:
+#         accessModes:
+#           - ReadWriteOnce
+#         resources:
+#           requests:
+#             storage: 1Gi
+#       replicas: 1
+#   databases:
+#     - name: {{ .Values.nameSpace }}
+#       template: template1
+#       owner: postgres
+#       lcCollate: "en_US.UTF-8"
+#       lcCtype: "en_US.UTF-8"
+#   patroni:
+#     dynamicConfiguration:
+#       postgresql:
+#         pg_hba:
+#           - host all all 0.0.0.0/0 trust
+#           - host all postgres 127.0.0.1/32 md5
+#   postgresVersion: 15
+

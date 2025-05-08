@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "getapp-{{ .Values.nameSpace }}"
+  labels:
+    getapp: api
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+
+data:
+  # Keycloak
+  AUTH_SERVER_URL: "https://keycloak.<yourdomain.com>/auth"
+  REALM: "getapp"
+  CLIENT_ID: "api"
+  SECRET_KEY: ""
+  COOKIE_KEY: "KEYCLOAK_JWT"
+
+  # Kafka
+  KAFKA_BROKER_URL: "kafka-broker-service.{{ .Values.nameSpace }}.svc.cluster.local:9092"
+  KAFKAJS_NO_PARTITIONER_WARNING: "1"
+
+  # Microservice client
+  MICRO_SERVICE_TYPE: "KAFKA" #KAFKA/SOCKET
+  MICROSERVICE_RESPONSE_WAIT_TIME: "10000"
+
+  # Postgres
+  POSTGRES_HOST: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: "getapp"
+  POSTGRES_PASSWORD: "<your password>"
+  POSTGRES_DB: "getapp"
+
+  #gFrogArtifactory
+  JFROG_BASE_URL: "https://<yourdomain.com>/artifactory/"
+  JFROG_REPO: "getapp-f/"
+  JFROG_USER_NAME: "admin"
+  JFROG_PASSWORD: "<your password>"
+
+  DEVICE_SECRET: DEVICE_SECRET
+  # JWT
+  JWT_SECRET: "this-is-my-secret-only-for-dev"
+  JWT_EXPIRATION: "100y"
+
+  # AWS
+  AWS_REGION: "us-east-2"
+  ACCESS_KEY_ID: ""
+  SECRET_ACCESS_KEY: ""
+  BUCKET_NAME: "getapp-develop"
+  UPLOAD_URL_EXPIRE: "3600" # seconds
+  DOWNLOAD_URL_EXPIRE: "3600"
+
+  S3_ENDPOINT_INTERNAL: "https://minio-api.{{ .Values.routeMainlUrl }}"
+  S3_ENDPOINT_EXTERNAL: "https://minio-api.{{ .Values.routeMainlUrl }}"
+  ACCESS_KEY_ID: "<getapp>"
+  SECRET_ACCESS_KEY: "<your password>"
+  MINIO_USE_SSL: "true"
+  RPC_PAYLOAD_VERSION: "2"
+
+  # integration test envs
+  SERVER_URL: "api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}/api/"
+  TEST_USERNAME: ""
+  TEST_PASSWORD: ""
+  COMPONENT_NAME: "test-demo"
+  COMPONENT_DESCRIPTION: "Description demo"
+  RELEASE_NOTE: "some notes"
+  MIGRATION_RUN: 'true'
+  PRODUCT_ID: "3a924ad6-6565-4112-b0b7-9f91cd6adc99"
+  BOUNDING_BOX: "34.66110229026526,31.827201840060297,34.67849731678143,31.84703826875193"

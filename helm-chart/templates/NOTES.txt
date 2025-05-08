@@ -1,0 +1,15 @@
+1. Access the getaa application using the following URLs:
+
+API URL:
+--------
+https://api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+
+Swagger UI URL:
+--------------
+https://api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}/docs/
+
+Dashboard URL:
+-------------
+https://dashboard-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+
+Note: These URLs are configured through OpenShift routes and use TLS edge termination.

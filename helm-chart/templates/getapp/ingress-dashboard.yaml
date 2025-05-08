@@ -1,0 +1,35 @@
+{{- if not .Values.isOpenShift }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 8k
+  labels:
+    getapp: dashboard
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - dashboard-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+    secretName: dashboard-tls
+  rules:
+  - host: dashboard-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dashboard
+            port:
+              number: 3002
+{{- end }}

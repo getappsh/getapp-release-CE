@@ -1,0 +1,23 @@
+{{- if .Values.isOpenShift }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: dashboard
+  labels:
+    getapp: dashboard
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+spec:
+  host: dashboard-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}
+  to:
+    kind: Service
+    name: dashboard
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+{{- end }}

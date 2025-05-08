@@ -1,0 +1,27 @@
+# kind: HorizontalPodAutoscaler
+# apiVersion: autoscaling/v2beta2
+# metadata:
+#   name: deploy
+# spec:
+#   scaleTargetRef:
+#     kind: Deployment
+#     name: deploy
+#     apiVersion: apps/v1
+#   minReplicas: 1
+#   maxReplicas: 10
+#   metrics:
+#     - type: Resource
+#       resource:
+#         name: memory
+#         target:
+#           type: Utilization
+#           averageUtilization: 70
+#     - type: Resource
+#       resource:
+#         name: cpu
+#         target:
+#           type: Utilization
+#           averageUtilization: 70
+
+
+

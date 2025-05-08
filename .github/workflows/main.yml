@@ -1,0 +1,343 @@
+name: Create full Release
+
+on:
+  push:
+    branches:
+      - main
+env:
+  DEV_NAMESPACE: getapp  #  the namespace where you want to deploy the production environment
+  RELEASE_TAG: 1.4.0-CE
+
+
+
+jobs: ##
+#   calculate_new_tag:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       tag: ${{ steps.set_tag.outputs.NEW_TAG }}
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0  ## Ensure all tags are fetched
+
+#       - name: Calculate new tag
+#         id: set_tag
+#         run: |
+#           LAST_TAG=$(git describe --abbrev=0 --tags)
+#           echo "last tag is: $LAST_TAG"
+#           MAJOR=$(echo $LAST_TAG | awk -F'.' '{print $1}')
+#           MINOR=$(echo $LAST_TAG | awk -F'.' '{print $2}')
+#           PATCH=$(echo $LAST_TAG | awk -F'.' '{print $3}')
+#           NEXT_PATCH=$((PATCH + 1))
+#           NEW_TAG="$MAJOR.$MINOR.$NEXT_PATCH"
+#           echo "new tag is: $NEW_TAG"
+#           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+  calculate_new_tag:
+    runs-on: ubuntu-latest
+    env:
+     RELEASE_TAG: ${{ env.RELEASE_TAG }}
+    
+    outputs:
+      tag: ${{ steps.set_tag.outputs.NEW_TAG }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  ## Ensure all tags are fetched
+
+      - name: Calculate new tag
+        id: set_tag
+        run: |
+          NEW_TAG="$RELEASE_TAG"
+          echo "new tag is: $NEW_TAG"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+
+  get_all_microservices_tags:
+    needs: calculate_new_tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get all microservices tags
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #!/bin/bash
+          set -x
+          # Clear the file first
+          rm .env || true
+          
+          # Start with the new release tag (only once)
+          echo "GETAPP_RELEASE_TAG=${{ needs.calculate_new_tag.outputs.tag }}" > .env
+          
+          # Define repositories in the order you want them to appear
+          declare -A REPOSITORIES=(
+            ["API"]="getappsh/api"
+            ["DELIVERY"]="getappsh/delivery"
+            ["DEPLOY"]="getappsh/deploy"
+            ["DISCOVERY"]="getappsh/discovery"
+            ["OFFERING"]="getappsh/offering"
+            ["PROJECT_MANAGEMENT"]="getappsh/project-management"
+            ["UPLOAD"]="getappsh/upload"
+            ["GETMAP"]="getappsh/getmap"
+            ["DASHBOARD"]="getappsh/dashboard"
+          )
+          
+          # Process each repository and append to .env
+          for PROJECT in "${!REPOSITORIES[@]}"; do
+            REPO=${REPOSITORIES[$PROJECT]}
+            TAG=$(curl -s -H "Authorization: token $ACCESS_TOKEN" \
+              "https://api.github.com/repos/${REPO}/tags" | \
+              jq -r '[.[] | select(.name | contains("develop"))][0].name // "null"')
+            
+            # Only append if we got a tag
+            if [ ! -z "$TAG" ]; then
+              echo "${PROJECT}_TAG=${TAG}" >> .env
+            else
+              echo "Warning: No tag found for ${REPO}"
+            fi
+          done
+          # docs
+          DOCS_TAG=$(curl -s https://api.github.com/repos/getappsh/docs/releases/latest | jq -r '.tag_name')
+          echo "the docs tag is $DOCS_TAG"
+          echo DOCS_TAG=${DOCS_TAG} >> .env
+
+          # Print the final contents without line numbers
+          echo "Final .env contents:"
+          cat .env
+          cp .env env-file
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: env-file
+          path: env-file
+
+    
+        #
+  create_files_with_updated_env:
+    needs:
+      - get_all_microservices_tags
+      - calculate_new_tag
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main        
+          fetch-depth: 0 # Important for getting all tags and history
+  
+      - name: Download .env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
+        
+      - name: Move .env file to source directory
+        run: |
+          mv env-file $GITHUB_WORKSPACE/.env
+
+
+      - name: Create release files
+        env:
+          THIS_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.calculate_new_tag.outputs.tag }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PAT_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
+          NAMESPACE: ${{ env.DEV_NAMESPACE }}
+        run: |
+          #!/bin/bash
+          set -x
+          pwd
+          source $GITHUB_WORKSPACE/.env
+          eval "echo \"$(cat $GITHUB_WORKSPACE/stuff/getapp-release-info-template.txt)\"" > $GITHUB_WORKSPACE/stuff/getapp-release-info.txt
+          eval "echo \"$(cat $GITHUB_WORKSPACE/stuff/images-list-template.txt)\"" > $GITHUB_WORKSPACE/getapp-images-list.txt
+          echo "$(cat $GITHUB_WORKSPACE/stuff/docker-compose-template.txt)" > $GITHUB_WORKSPACE/docker-compose/docker-compose.yaml
+
+          cp $GITHUB_WORKSPACE/.env $GITHUB_WORKSPACE/docker-compose/.env
+          # test the results
+          echo "getapp-images-list NEW file:"
+          cat getapp-images-list.txt
+          echo "getapp-release-info.txt NEW file:"
+          cat stuff/getapp-release-info.txt
+
+          cat stuff/getapp-release-info.txt > readme.md
+
+          chmod +x scripts/test-existens-in-harbor.sh
+          ./scripts/test-existens-in-harbor.sh
+
+          # chart change
+          sed -E -i "s,api":" .*,api":" ${API_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,delivery":" .*,delivery":" ${DELIVERY_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,deploy":" .*,deploy":" ${DEPLOY_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,discovery":" .*,discovery":" ${DISCOVERY_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,offering":" .*,offering":" ${OFFERING_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,projectmanagment":" .*,projectmanagment":" ${PROJECT_MANAGEMENT_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,upload":" .*,upload":" ${UPLOAD_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,dashboard":" .*,dashboard":" ${DASHBOARD_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,getmap":" .*,getmap":" ${GETMAP_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,docs":" .*,docs":" ${DOCS_TAG},g" helm-chart/values.yaml
+          sed -E -i "s,gitlabrelease":" .*,gitlabrelease":" ${GETAPP_RELEASE_TAG},g" helm-chart/values.yaml
+          
+          sed -E -i "s,nameSpace":" .*,nameSpace":" ${NAMESPACE},g" helm-chart/Chart.yaml
+          # getapp and getmap ##
+          cat helm-chart/values.yaml
+
+          # Copy installation scripts to root
+          cp scripts/install.sh ./install.sh || true
+          cp scripts/load-images.sh ./load-images.sh || true
+          chmod +x install.sh load-images.sh 
+
+          # git push
+          git config user.email "david@linnovate.net"
+          git config user.name "ci-bot"
+          echo test >> stuff/nothing
+
+          git add .
+          git commit -m "Automated commit from GitHub Actions"
+          git tag -a $RELEASE_TAG -m "Release $RELEASE_TAG"
+          git push origin main --tags
+
+        shell: bash
+
+      - name: Zip all repository files
+        env:
+          RELEASE_TAG: ${{ needs.calculate_new_tag.outputs.tag }}
+
+        run: |
+          # Create chart zip with installation scripts at root level
+          zip -r getapp-chart-$RELEASE_TAG.zip helm-chart docker-compose scripts/install.sh scripts/load-images.sh readme.md how-to-use-this-repo.md -x "*.git*"
+        shell: bash
+
+      - name: Upload zipped files
+        uses: actions/upload-artifact@v4
+        with:
+          name: getapp-chart
+          path: getapp-chart-${{ needs.calculate_new_tag.outputs.tag }}.zip
+
+        
+  zip_images_and_chart_and_upload_to_azure:
+    needs:
+      - get_all_microservices_tags
+      - calculate_new_tag
+      - create_files_with_updated_env
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: zip images
+        env:
+          RELEASE_TAG: ${{ needs.calculate_new_tag.outputs.tag }}
+
+        run: |
+          chmod +x scripts/getapp-images-to-tar.sh
+          ./scripts/getapp-images-to-tar.sh
+          mv *.zip getapp-images-$RELEASE_TAG.zip
+
+      - name: Download getapp-chart
+        uses: actions/download-artifact@v4
+        with:
+          name: getapp-chart
+  
+      - name: zip chart and images to one file
+        env:
+          RELEASE_TAG: ${{ needs.calculate_new_tag.outputs.tag }}
+        run: |
+          pwd
+          ls -la
+          # First copy the installation files to current directory
+          cp scripts/install.sh scripts/load-images.sh how-to-use-this-repo.md ./ || true
+          # Create the full release zip including all components and installation files
+          zip getapp-full-release-$RELEASE_TAG.zip getapp-images-$RELEASE_TAG.zip getapp-chart-$RELEASE_TAG.zip getapp-agent-$RELEASE_TAG.zip install.sh load-images.sh how-to-use-this-repo.md
+        shell: bash
+        
+                      
+      - name: Upload file to Azure Storage
+        uses: azure/CLI@v1
+        env:
+          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+          RELEASE_TAG: ${{ needs.calculate_new_tag.outputs.tag }}
+          AZURE_STORAGE_ACCOUNT: getapprelease
+          AZURE_CONTAINER: getapp
+
+        with:
+          inlineScript: |
+            az storage blob upload \
+              --account-name $AZURE_STORAGE_ACCOUNT \
+              --account-key $AZURE_STORAGE_KEY \
+              --container-name $AZURE_CONTAINER \
+              --file getapp-full-release-$RELEASE_TAG.zip \
+              --name getapp-full-release-$RELEASE_TAG.zip 
+
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: 
+      - calculate_new_tag
+      - create_files_with_updated_env
+      -  zip_images_and_chart_and_upload_to_azure
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important for getting all tags and history
+          ref: main  # Explicitly checkout the latest main branch state
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.calculate_new_tag.outputs.tag }}
+          release_name: Release ${{ needs.calculate_new_tag.outputs.tag }}
+          body: |
+            ## Downloads link for GetApp system
+            [Helm & Docker-compose & Docker images](https://getapprelease.blob.core.windows.net/getapp/getapp-full-release-${{ needs.calculate_new_tag.outputs.tag }}.zip)
+            Click to download.
+
+            ### Content of the zip file
+            The zip file contains:
+            1. `getapp-chart-*.zip` - Helm chart, Docker Compose files, and installation scripts
+            2. `getapp-images-*.zip` - Docker image files
+            3. Installation files at root level:
+               - `install.sh`
+               - `load-images.sh`
+               - `how-to-use-this-repo.md`
+
+            ### File Structure
+            ```
+            getapp-full-release-*.zip
+            ├── install.sh
+            ├── load-images.sh
+            ├── how-to-use-this-repo.md
+            ├── getapp-chart-*.zip
+            │   ├── helm-chart/
+            │   │   ├── Chart.yaml
+            │   │   ├── values.yaml
+            │   │   └── templates/
+            │   ├── docker-compose/
+            │   ├── scripts/
+            │   │   ├── install.sh
+            │   │   └── load-images.sh
+            │   ├── readme.md
+            │   └── how-to-use-this-repo.md
+            ├── getapp-images-*.zip
+                └── images/
+                    └── *.tar            ```
+
+            ### Quick Installation
+            After extracting the release package:
+            ```bash
+            chmod +x install.sh
+            ./install.sh
+            ```
+            Follow the prompts to configure your registry and deployment settings.
+
+            For detailed instructions, see the included `how-to-use-this-repo.md` file.
+
+          draft: false
+          prerelease: false

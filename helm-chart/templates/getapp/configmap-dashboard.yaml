@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "dashboard-{{ .Values.nameSpace }}"
+  labels:
+    getapp: dashboard
+    chart: {{ template "getapp-api.chart" . }}
+    draft: {{ .Values.draft | default "draft-app" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    gitlabrelease: "{{ .Values.gitlabrelease }}"
+data:
+  COOKIE_KEY: KEYCLOAK_JWT
+  NEXT_PUBLIC_BASE_PATH: 'https://api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}'
+  NEXTAUTH_URL: 'https://dashboard-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}'
+  CLIENT_ID: api
+  SECRET_KEY: 2SmS4ldaAxTJRyFBGPuJWvEgtG4oqyPm
+  BASE_PATH: 'https://api-{{ .Values.nameSpace }}.{{ .Values.routeMainlUrl }}'
+  NEXTAUTH_SECRET: c1d66b988399cc18cffc7c236a247c2f125d6330c1b2121470d6755d3bcb6241
+  ISSUER: 'https://keycloak.getapp.sh/auth/realms/getapp'
+  SESSION_MAX_AGE: '1800'
+  NEXT_PUBLIC_ISSUER: 'https://keycloak.getapp.sh/auth/realms/getapp'
+
