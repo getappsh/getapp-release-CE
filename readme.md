@@ -2,7 +2,7 @@
 
 This is the list of docker images that or included in this release.
 
-## Release 1.4.0-CE 
+## Release 1.4.1-CE 
 
 **getapp microservices:**
 
@@ -16,5 +16,5 @@ This is the list of docker images that or included in this release.
 | 6 | project management | 1.4.1-develop | harbor.getapp.sh/getapp-dev/project-management:1.4.1-develop |
 | 7 | upload             | 1.4.1-develop            | harbor.getapp.sh/getapp-dev/upload:1.4.1-develop                        |
 | 8 | getmap        | 1.4.2-develop            | harbor.getapp.sh/getapp-dev/getmap-node:1.4.2-develop                        |
-| 9 | dashboard          | 1.4.2-develop        | harbor.getapp.sh/getapp-dev/dashboard:1.4.2-develop                  |
+| 9 | dashboard          |         | harbor.getapp.sh/getapp-dev/dashboard:                  |
 | 10 | docs         | v1-27-03-2025        | harbor.getapp.sh/getapp-dev/docs:v1-27-03-2025                  |
