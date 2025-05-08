@@ -5,7 +5,7 @@ on:
     branches:
       - main
 env:
-  DEV_NAMESPACE: getapp  #  the namespace where you want to deploy the production environment
+  DEV_NAMESPACE: getapp  ##  the namespace where you want to deploy the production environment
   RELEASE_TAG: 1.4.0-CE
 
 
