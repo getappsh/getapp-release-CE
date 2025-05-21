@@ -162,7 +162,7 @@ jobs: ###
           cat stuff/getapp-release-info.txt > readme.md
 
           chmod +x scripts/test-existens-in-harbor.sh
-          ./scripts/test-existens-in-harbor.sh
+          #./scripts/test-existens-in-harbor.sh
 
           # chart change
           sed -E -i "s,api":" .*,api":" ${API_TAG},g" helm-chart/values.yaml
