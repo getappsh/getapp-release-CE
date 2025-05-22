@@ -6,11 +6,11 @@ on:
       - main
 env:
   DEV_NAMESPACE: getapp  ##  the namespace where you want to deploy the production environment
-  RELEASE_TAG: 1.4.2-CE
+  RELEASE_TAG: 1.4.3-CE
 
 
 
-jobs: ###
+jobs: ##
 #   calculate_new_tag:
 #     runs-on: ubuntu-latest
 #     outputs:
