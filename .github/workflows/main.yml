@@ -6,7 +6,7 @@ on:
       - main
 env:
   DEV_NAMESPACE: getapp  ##  the namespace where you want to deploy the production environment
-  RELEASE_TAG: 1.4.4-CE
+  RELEASE_TAG: 1.4.5-CE
 
 
 
@@ -151,7 +151,7 @@ jobs: ##
           eval "echo \"$(cat $GITHUB_WORKSPACE/stuff/getapp-release-info-template.txt)\"" > $GITHUB_WORKSPACE/stuff/getapp-release-info.txt
           eval "echo \"$(cat $GITHUB_WORKSPACE/stuff/images-list-template.txt)\"" > $GITHUB_WORKSPACE/getapp-images-list.txt
           echo "$(cat $GITHUB_WORKSPACE/stuff/docker-compose-template.txt)" > $GITHUB_WORKSPACE/docker-compose/docker-compose.yaml
-          echo "##########" >> $GITHUB_WORKSPACE/getapp-images-list.txt
+          echo "%%%%%%%%%%%%%%" >> $GITHUB_WORKSPACE/getapp-images-list.txt
           cp $GITHUB_WORKSPACE/.env $GITHUB_WORKSPACE/docker-compose/.env
           # test the results
           echo "getapp-images-list NEW file:"
