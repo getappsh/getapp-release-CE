@@ -2,7 +2,7 @@
 
 This is the list of docker images that or included in this release.
 
-## Release 1.4.2-CE 
+## Release 1.4.3-CE 
 
 **getapp microservices:**
 
